@@ -3,7 +3,7 @@ A Mersenne Prime finder Python app that wraps a C++ solver that uses ultra-exten
 
 Mersenne Primes have the format: MP = 2^p - 1, where p is a standard prime number.  Not all p result in a Mersenne.  Lucas/Lehmer discovered an efficient test for MP-ness.  The MP's grow quickly to have huge numbers of digits.  
 
-The largest prime number discoveries have been Mersenne's.  There are 49 known to date.  The latest: On January 19, 2016, Curtis Cooper published his discovery of a 49th Mersenne prime, 274,207,281 − 1 (a number with 22,338,618 digits).  He has discovered the last 4 largest primes.  He uses the globally available GIMP network to perform his searches.  More about them here: https://en.wikipedia.org/wiki/Mersenne_prime.
+The largest prime number discoveries have been Mersenne's.  There are 49 known to date.  The latest: On January 19, 2016, Curtis Cooper published his discovery of a 49th Mersenne prime, 2^74,207,281 − 1, having 22,338,618 digits.  He has discovered the last 4 largest primes.  He uses the globally available GIMP network to perform his searches.  More about them here: https://en.wikipedia.org/wiki/Mersenne_prime.
 
 Python by default can handle arbitrary integer size.  C/C++'s std lib can't nominally handle larger than quad precision, but the Gnu Multi-Precision library is designed to handle arbritrary precision arithmetic.  Clever algorithms allow realizable performance for what would otherwise be order-polynomial complexity.  For example, sqr(N) performance for multiplications.  An example of the cleverness: FFT's are used above a user configurable threshold of digits to perform a multiplication.
 

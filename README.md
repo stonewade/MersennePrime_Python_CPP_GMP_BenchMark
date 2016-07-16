@@ -31,4 +31,4 @@ To build and test on a single command line:
 
 	bash -p -c "gmake clean && gmake" && taskset -c 0-10 bash -c 'LD_PRELOAD="./liblucaslehmerpy.so ./lucaslehmer.so /usr/lib/x86_64-linux-gnu/libgmpxx.so" PerfNumMultiCLL.py 10 20001'	
 
-Here, taskset is used to choose 11 cores on a platform.  The parameters 10 and 20001 mean: use 10 threads and find all the Mersenne Primes using the first 20001 standard primes starting at 1.
+Here, taskset is used to choose 11 cores on a platform.  The parameters 10 and 20001 mean: use 10 threads and find all the Mersenne Primes using the standard primes from the first 20001 unsigned numbers starting at 1.

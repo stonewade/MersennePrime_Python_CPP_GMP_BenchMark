@@ -9,7 +9,8 @@ Python by default can handle arbitrary integer size.  C/C++'s std lib can't nomi
 
 This is a simple design that was started with Python in an exploration of "perfect numbers" - associated with Mersenne's as described in the provided reference.  The performance enhancement with the GMP lib allowed the Mersenne search in this case to grow from about 10,000 primes (values of p) with Python, in reasonable time, to about 30,000 in reasonable time on a 12 core linux server.  This could be extended to an arbitrary number of servers - but the infrastructure would finally limit the performance.  The GIMP network has been tweaked for many years to yield the fastest performance.
 
-Potential Improvements
+Potential Improvements:
+
 I believe I could make my own version faster on my server - I spent only a low to moderate amount of time optimizing it using /usr/bin/perf.  The bottleneck is in the the Lucas-Lehmer calculation - specifically the multiplication.  NUMA plus careful attention to memory allocation will be required to make it faster.  The last portion of the test is the pickle transmission from the 10 used cores back to the consolidation function for the resulting primes.  This could easily be streamlined, or in fact ignored if desired, since the results and elapsed times have already been printed before that begins.  It more than doubles the processing time above about 20,000 standard primes.  I could also improve the build process to make it cleaner, with rpaths, for example, to avoid LD_PRELOADs.  I could also clean up the resulting printout's and use matplotlib to explore potential correlations between the resulting prime numbers.  I'm certain that has been beaten to death over the years in order to find some way to narrow the search and the numerical processing, but I'd like to see it for myself.
 
 Required:

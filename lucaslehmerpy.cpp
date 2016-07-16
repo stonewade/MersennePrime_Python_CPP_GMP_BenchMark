@@ -33,21 +33,11 @@ LucasLehmer::LucasLehmer() : timesum(0), timestd(0)
 
 void LucasLehmer::mpz_convFromPy(mpz_t mv, PyObject* pv)
 {
-    // if (!PyLong_Check(pv))
-    // {
-    // 	std::cerr << "Exception: insidecfp - not PyObject number" << std::endl;
-    // 	throw;
-    // }
-
-    // PyObject_Print(pv, stdout, 0);
-    // std::cout << std::endl;
-
     PyObject* nv = PyObject_Str(pv);
 
     Py_ssize_t len = PyObject_Length(nv);
     char *buffer = PyString_AsString(nv);
 
-//    print_trace(stdout, __FILE__, __LINE__);
     mpz_set_str(mv, buffer, 10);
 }
 
@@ -70,7 +60,9 @@ PyObject* LucasLehmer::sa_getListOfPrimes(PyObject* primes, PyObject* N)
     primeVec_t pvec;
 
     for ( size_t i = 2; i < num_to_get + 1; i++)
+    {
 	pvec.push_back(i);
+    }
 
     unsigned long candidate = 0;
 
@@ -91,7 +83,9 @@ PyObject* LucasLehmer::sa_getListOfPrimes(PyObject* primes, PyObject* N)
 	for ( unsigned long i = candidate; i < num_to_get + 1; i += candidate)
 	{
 	    if ((iter = find(pvec.begin(), pvec.end(), i)) != pvec.end())
+	    {
 		pvec.erase(iter);
+	    }
 	}
     }
     Py_RETURN_TRUE;
@@ -102,7 +96,6 @@ PyObject* LucasLehmer::sa_lucaslehmer(PyObject* N)
     if (!PyObject_Compare(PyNumber_Remainder(N, _py_two), _py_zero)) 
 	return _py_two;
     
-//    if (0 < PyObject_Compare(_py_maxx, N))
     if (0)
     {
      	unsigned PY_LONG_LONG n = PyInt_AsUnsignedLongLongMask(N);
@@ -144,46 +137,33 @@ PyObject* LucasLehmer::sa_lucaslehmer(PyObject* N)
 
 	while (mpz_cmp(i, tmp1) < 0)
 	{
-//		    t1 = rdtsc();
 	    mpz_mul(tmp3, s, s);
-//		    t2 = rdtsc();
 	    mpz_sub(tmp2, tmp3, _mpz_two);
-//		    t3 = rdtsc();
-//	    int cmp = mpz_cmp(tmp2, M);
 	    mpz_mod(s, tmp2, M);
-//	    mpz_mod(tmp3, s, n);
-//	    gmp_printf ("i = %Zd, cmp = %d, s = %Zd, s % N = %Zd, M = %Zd\n", i, cmp, s, tmp3, M);
-//		    t4 = rdtsc();
-		// std::cout 
-		//     << "etime = " << getElapsed() 
-		//     << ", tx = " << t2 - t1 
-		//     << "," << t3 - t2
-		//     << "," << t4 - t3 
-		//     << std::endl;
 	    mpz_add(i, i, _mpz_one);
 	}
 
-//	gmp_printf ("s = %Zd\n", s);
-
 	if (mpz_cmp(s, _mpz_zero) != 0)
-//	    return _py_zero;
+	{
 	    Py_RETURN_FALSE;
+	}
 
     }
-//    return mpz_convToPy(M);
     Py_RETURN_TRUE;
 }
 
 PyObject* LucasLehmer::sa_gcd(PyObject* a, PyObject* b)
 {
     PyObject* c = PyLong_FromLong( 0 );
-    if (PyObject_Compare(a, _py_zero)) 
+    if (PyObject_Compare(a, _py_zero))
+    {
 	while (0 < PyObject_Compare(a, _py_zero))
 	{
 	    c = a; 
 	    a = PyNumber_Remainder(b, a);  
 	    b = c;
 	}
+    }
 
     b = PyNumber_Add(b, _py_zero);
 
@@ -197,5 +177,6 @@ PyObject* LucasLehmer::sa_pow2mpcm(PyObject* y, PyObject* n, PyObject* c)
     tmp(PyNumber_Remainder(tmp(), n));
     tmp(PyNumber_Add(tmp(), c));
     tmp(PyNumber_Remainder(tmp(), n));
+    
     return tmp();
 }

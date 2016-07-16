@@ -46,7 +46,6 @@ def lucasLehmer(N):
             s = ((s * s) - 2) % M
         else:
             return False
-#        print 's = %d' % s
     if s:
         return False
     return True
@@ -54,8 +53,6 @@ def lucasLehmer(N):
 def doLucasLehmer(X):
     Clucaslehmer = lucaslehmer.LucasLehmer()
     return Clucaslehmer.sa_lucaslehmer(X);
-#    print 'X = %d' % X
-#    return lucasLehmer(X)
 
 def doNothing(sig,frame):
     print('Received SIGINT: letting parent handle it, disabling')
@@ -69,32 +66,19 @@ def worker(s, pool, X):
     with s:
         pool.makeActive(name)
         timestart = time.time()
-#        print '\t\tNow running (worker Activation): %s' % str(pool)
-
         v = 0
-#        for i in xrange(X):
-#            v += pow(2,i)
-#        for i in xrange(X - 1):
-#            v *= 2
-#        print 'going to do an LL'
         l = doLucasLehmer(X)
-#        print 'l = ', l
         timestop = time.time()
         time_elapsed = timestop - timestart
         from_start = timestop - appstart
         pstr = '%d: ' % X
-#        print pstr
         if l:
             timestamp = datetime.datetime(today.year, today.month, today.day).utcnow()
-#            pstr += '%d is perfect -- time: from start: %f -- elapsed: %f' % (v, from_start, time_elapsed)
             pstr += 'prime is mersenne -- time: from start: %f -- elapsed: %f' % (from_start, time_elapsed)
             pool.addResult(X, pstr)
             print('\t\t%d ... time: from start %f -- elapsed: %f' % (X, from_start, time_elapsed))
-#        else:
-#            pstr += 'no perfect number is found -- elapsed time: %f, v = %d' % (time_elapsed, v)
 
         pool.makeInactive(name)
-#        print '\t\tNow running (worker Deactivation): %s' % str(pool)
 
 def primeFact(limit):
     numbers = [ _ for _ in range (2, limit + 1) ]
@@ -125,7 +109,6 @@ def checkTheory(s, numlimit, numproc, ct, print_primes):
         except:
             print('Exception getting primes')
             sys.exit(1)
-    #    primes = primeFact(numlimit)
         if print_primes:
             print(primes)
         print('Total number of primes in set: ', len(primes))

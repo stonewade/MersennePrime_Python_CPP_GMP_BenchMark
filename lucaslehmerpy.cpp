@@ -135,13 +135,14 @@ PyObject* LucasLehmer::sa_lucaslehmer(PyObject* N)
 	mpz_mul_2exp(tmp2, _mpz_one, PyLong_AsLong(N));
 	mpz_sub(M, tmp2, _mpz_one);
 
-	while (mpz_cmp(i, tmp1) < 0)
+	do
 	{
 	    mpz_mul(tmp3, s, s);
 	    mpz_sub(tmp2, tmp3, _mpz_two);
 	    mpz_mod(s, tmp2, M);
 	    mpz_add(i, i, _mpz_one);
 	}
+	while (mpz_cmp(i, tmp1) < 0);
 
 	if (mpz_cmp(s, _mpz_zero) != 0)
 	{

@@ -10,11 +10,10 @@ import signal
 import datetime
 from datetime import date
 import time
+import copy
+import argparse
 
 from collections import deque
-
-import gc
-gc.set_debug(gc.DEBUG_LEAK)
 
 from pybindgen import *
 
@@ -37,7 +36,7 @@ sleep_time = 0.1
 e = multiprocessing.Event()
 
 def lucasLehmer(N):
-    if N%2==0:
+    if N % 2 == 0:
         return 2
     s = 4
     M = pow(2, N) - 1
@@ -55,7 +54,7 @@ def doLucasLehmer(X):
     return Clucaslehmer.sa_lucaslehmer(X);
 
 def doNothing(sig,frame):
-    print('Received SIGINT: letting parent handle it, disabling')
+    print 'Received SIGINT: letting parent handle it, disabling'
     time.sleep(1)
     process.shutdown()
 
@@ -75,8 +74,8 @@ def worker(s, pool, X):
         if l:
             timestamp = datetime.datetime(today.year, today.month, today.day).utcnow()
             pstr += 'prime is mersenne -- time: from start: %f -- elapsed: %f' % (from_start, time_elapsed)
-            pool.addResult(X, pstr)
-            print('\t\t%d ... time: from start %f -- elapsed: %f' % (X, from_start, time_elapsed))
+            ActivePool.addResult(X, pstr)
+            print '\t\t%d ... time: from start %f -- elapsed: %f' % (X, from_start, time_elapsed)
 
         pool.makeInactive(name)
 
@@ -85,11 +84,11 @@ def primeFact(limit):
     primes = []
 
     while numbers:
-        candidate = numbers [0]
-        primes.append (candidate)
-        for i in range (candidate, limit + 1, candidate):
+        candidate = numbers[0]
+        primes.append(candidate)
+        for i in range(candidate, limit + 1, candidate):
             if i in numbers: 
-                numbers.remove (i)
+                numbers.remove(i)
     return primes
 
 def doPass(sig, frame):
@@ -107,11 +106,11 @@ def checkTheory(s, numlimit, numproc, ct, print_primes):
             Clucaslehmer = lucaslehmer.LucasLehmer()
             Clucaslehmer.sa_getListOfPrimes(primes, numlimit)
         except:
-            print('Exception getting primes')
+            print 'Exception getting primes'
             sys.exit(1)
         if print_primes:
-            print(primes)
-        print('Total number of primes in set: ', len(primes))
+            print primes
+        print 'Total number of primes in set: ', len(primes)
 
         for g_ct in primes:
             name = 'job' + str(g_ct)
@@ -125,7 +124,7 @@ def checkTheory(s, numlimit, numproc, ct, print_primes):
 
         for j in j_list:
             if e.is_set():
-                print('Terminated by signal: number of remaining jobs = ', len(queue))
+                print 'Terminated by signal: number of remaining jobs = ', len(queue)
                 break
 
             while len(start_set) < numproc and len(queue):
@@ -154,7 +153,6 @@ def checkTheory(s, numlimit, numproc, ct, print_primes):
                 if not len(queue) and not len(start_set) and not len(fin_set):
                     break
 
-        pool.printResults()
         for j in jobs:
             if pool.inList(name):
                 pool.makeInactive(jobs[j].name)
@@ -162,55 +160,62 @@ def checkTheory(s, numlimit, numproc, ct, print_primes):
         name = 'job' + str(ct)
         queue.append(name)
         worker(s, pool, ct)
-        pool.printResults()
+        printResults()
 
-MAX_CPUS = 30
+MAX_THREADS = 30
 g_ct = 2
 
 class ActivePool(object):
-    def __init__(self):
-        super(ActivePool, self).__init__()
-        self.mgr = multiprocessing.Manager()
-        self.active = self.mgr.list()
-        self.lock = multiprocessing.Lock()
-        self.results = self.mgr.dict()
-        self.pid = os.getpid()
-        self.mon_incr = 1000
-        self.mon_val = self.mon_incr
-    def makeActive(self, name):
-        with self.lock:
-            self.active.append(name)
-    def makeInactive(self, name):
-        with self.lock:
-            self.active.remove(name)
-    def inList(self, name):
-        with self.lock:
-            if name in self.active:
+    mgr = multiprocessing.Manager()
+    results = mgr.dict()
+    active = mgr.list()
+    lock = multiprocessing.Lock()
+    @staticmethod
+    def getResults():
+        with ActivePool.lock:
+            return ActivePool.results
+            #return copy.deepcopy(ActivePool.results)
+    @staticmethod
+    def addResult(N, res):
+        with ActivePool.lock:
+            ActivePool.results[int(N)] = res
+    @staticmethod
+    def makeActive(name):
+        with ActivePool.lock:
+            ActivePool.active.append(name)
+    @staticmethod
+    def makeInactive(name):
+        with ActivePool.lock:
+            ActivePool.active.remove(name)
+    @staticmethod
+    def inList(name):
+        with ActivePool.lock:
+            if name in ActivePool.active:
                 return True
             else:
                 return False
+    def __init__(self):
+        super(ActivePool, self).__init__()
+        self.pid = os.getpid()
+        self.mon_incr = 1000
+        self.mon_val = self.mon_incr
     def __str__(self):
-        with self.lock:
-            return str(self.active)
+        with ActivePool.lock:
+            return str(ActivePool.active)
     def monVal(self, val):
-        with self.lock:
+        with ActivePool.lock:
             if val > self.mon_val:
-                print('Monitor: mon_val = %d, value now = %d' % (self.mon_val, val))
+                print 'Monitor: mon_val = %d, value now = %d' % (self.mon_val, val)
                 self.mon_val += self.mon_incr
-    def addResult(self, N, res):
-        with self.lock:
-            self.results[str(N)] = res
-    def printResults(self):
-        with self.lock:
-            keys = []
-            print('Results:')
-            for j in self.results.keys():
-                keys.append(int(j))
-            for i in sorted(keys):
-                print('\t', self.results[str(i)])
+
+def printResults():
+    print 'Results:'
+    results = ActivePool.getResults()
+    for key in sorted(results.keys()):
+        print str(key) + '\t' + results[key]
 
 def terminateAll(sig,frame):
-    print('Received SIGINT: terminating all jobs')
+    print 'Received SIGINT: terminating all jobs'
     sleep_time = 0
     e.set()
 
@@ -223,54 +228,49 @@ class MyProcess(multiprocessing.Process):
     def run(self):
         while not self.exit.is_set():
             time.sleep(1)
-        print('You exited!')
+        print 'You exited!'
 
     def shutdown(self):
-        print('Shutdown initiated')
+        print 'Shutdown initiated'
         self.exit.set()
 
-if __name__ == '__main__':
+def addArgs(p):
+    p.add_argument("-t", "--threads", type=int, required=False, default=10,
+                   help="Number of threads")
+    p.add_argument("-r", "--prime_range", type=int, required=False, default=20001,
+                   help="Range of primes to search starting with 1 to this number")
+    
+def main():
     """ the main process - starts off checkTheory()"""
 
-    if len(sys.argv) < 3 or len(sys.argv) > 6:
-        print('Usage: %s <#cpus> <#primes> [specific prime] [-p]' % sys.argv[0])
-        sys.exit(1)
+    parser = argparse.ArgumentParser()
+    addArgs(parser)
+
+    args = parser.parse_args()
 
     process = MyProcess()
     process.start()
 
-    numcpus = int(sys.argv[1])
-    numprimes = int(sys.argv[2])
+    numthreads = args.threads
+    numprimes = args.prime_range
 
     print_primes = False
 
     ct = 0
 
-    if len(sys.argv) > 4:
-        if sys.argv[4] == "-p":
-            print_primes = True
-            ct = int(sys.argv[3])
-        elif sys.argv[3] == "-p":
-            print_primes = True
-            ct = int(sys.argv[4])
-        else:
-            print('Usage: %s <#cpus> <#primes> [specific prime] [-p]' % sys.argv[0])
-            sys.exit(1)
-
-    if len(sys.argv) > 3:
-        if sys.argv[3] == "-p":
-            print_primes = True
-        else:
-            ct = int(sys.argv[3])
-
-    if numcpus > MAX_CPUS:
-        print('Limit # of CPUs is %d' % MAX_CPUS)
+    if numthreads > MAX_THREADS:
+        print 'Limit # of threads is %d' % MAX_THREADS
         sys.exit(1)
 
-    s = multiprocessing.Semaphore(numcpus)
+    s = multiprocessing.Semaphore(numthreads)
 
     pdbAttach.listen()
 
-    checkTheory(s, numprimes, numcpus, ct, print_primes)
+    checkTheory(s, numprimes, numthreads, ct, print_primes)
+    #printResults()
 
     process.shutdown()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -17,15 +17,15 @@ I believe I could make my own version faster on my server - I spent only a low t
 
 Required:
 
-o Linux OS - tested on Ubuntu 13.10 and up
+	o Linux OS - tested on Ubuntu 13.10 and up
 
-o g++: tested with 4.9 and up
+	o g++: tested with 4.9 and up
 
-o libgmpxx.so: tested with libgmpxx.so.4.5.0, can be gotten at: https://gmplib.org
+	o libgmpxx.so: tested with libgmpxx.so.4.5.0, can be gotten at: https://gmplib.org
 
-o Python2.7
+	o Python2.7
 
-o PyBindGen: tested with 0.15.0 and up, can be gotten at: https://pypi.python.org/pypi/PyBindGen
+	o PyBindGen: tested with 0.15.0 and up, can be gotten at: https://pypi.python.org/pypi/PyBindGen
 
 PerfNumMultiCLL.py -h gives:
      
@@ -52,23 +52,23 @@ The result should look something like:
 
 $ bash -p -c "gmake clean && gmake" && taskset -c 0-10 bash -c 'PerfNumMultiCLL.py -t 10 -r 10001'
 
-rm -f lucaslehmerpy_bind.cpp liblucaslehmerpy.so lucaslehmerpy.o lucaslehmerpy_bind.o lucaslehmer.so
+  rm -f lucaslehmerpy_bind.cpp liblucaslehmerpy.so lucaslehmerpy.o lucaslehmerpy_bind.o lucaslehmer.so
 
-Clean done
+  Clean done
 
-PYTHONPATH=:./ python lucaslehmerBind.py > lucaslehmerpy_bind.cpp
+  PYTHONPATH=:./ python lucaslehmerBind.py > lucaslehmerpy_bind.cpp
 
-g++  -O3 -fPIC -frecord-gcc-switches -I/usr/include/python2.7 -c -o lucaslehmerpy.o lucaslehmerpy.cpp
+  g++  -O3 -fPIC -frecord-gcc-switches -I/usr/include/python2.7 -c -o lucaslehmerpy.o lucaslehmerpy.cpp
 
-g++ -shared -fPIC  -O3 -rdynamic -Wl,-rpath -Wl,/home/wade/Dev/Python/MersennePrime_Python_CPP_GMP_BenchMark -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu -lgmpxx -lgmp -o liblucaslehmerpy.so lucaslehmerpy.o
+  g++ -shared -fPIC  -O3 -rdynamic -Wl,-rpath -Wl,/home/wade/Dev/Python/MersennePrime_Python_CPP_GMP_BenchMark -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu -lgmpxx -lgmp -o liblucaslehmerpy.so lucaslehmerpy.o
 
-g++  -O3 -fPIC -frecord-gcc-switches -I/usr/include/python2.7 -c -o lucaslehmerpy_bind.o lucaslehmerpy_bind.cpp
+  g++  -O3 -fPIC -frecord-gcc-switches -I/usr/include/python2.7 -c -o lucaslehmerpy_bind.o lucaslehmerpy_bind.cpp
 
-g++ -o lucaslehmer.so lucaslehmerpy_bind.o -shared -fPIC  -O3 -rdynamic -Wl,-rpath -Wl,/home/wade/Dev/Python/MersennePrime_Python_CPP_GMP_BenchMark -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu -L. -llucaslehmerpy -lgmpxx -lgmp
+  g++ -o lucaslehmer.so lucaslehmerpy_bind.o -shared -fPIC  -O3 -rdynamic -Wl,-rpath -Wl,/home/wade/Dev/Python/MersennePrime_Python_CPP_GMP_BenchMark -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu -L. -llucaslehmerpy -lgmpxx -lgmp
 
-Build done
+  Build done
 
-Total number of primes in set:  1229
+  Total number of primes in set:  1229
 
                 2 ... time: from start 0.051437 -- elapsed: 0.000041
 		
@@ -98,41 +98,41 @@ Total number of primes in set:  1229
 		
                 607 ... time: from start 1.205115 -- elapsed: 0.000289
 		
-Monitor: mon_val = 1000, value now = 1009
+	Monitor: mon_val = 1000, value now = 1009
 
                 1279 ... time: from start 2.157965 -- elapsed: 0.001700
 		
-Monitor: mon_val = 2000, value now = 2003
+	Monitor: mon_val = 2000, value now = 2003
 
                 2203 ... time: from start 3.442381 -- elapsed: 0.006397
 		
                 2281 ... time: from start 3.559078 -- elapsed: 0.009585
 		
-Monitor: mon_val = 3000, value now = 3001
+	Monitor: mon_val = 3000, value now = 3001
 
                 3217 ... time: from start 4.819234 -- elapsed: 0.026981
 		
-Monitor: mon_val = 4000, value now = 4001
+	Monitor: mon_val = 4000, value now = 4001
 
                 4253 ... time: from start 6.226845 -- elapsed: 0.064278
 		
                 4423 ... time: from start 6.427267 -- elapsed: 0.054439
 		
-Monitor: mon_val = 5000, value now = 5003
+	Monitor: mon_val = 5000, value now = 5003
 
-Monitor: mon_val = 6000, value now = 6007
+	Monitor: mon_val = 6000, value now = 6007
 
-Monitor: mon_val = 7000, value now = 7001
+	Monitor: mon_val = 7000, value now = 7001
 
-Monitor: mon_val = 8000, value now = 8009
+	Monitor: mon_val = 8000, value now = 8009
 
-Monitor: mon_val = 9000, value now = 9001
+	Monitor: mon_val = 9000, value now = 9001
 
                 9689 ... time: from start 23.469367 -- elapsed: 0.449409
 		
                 9941 ... time: from start 25.214372 -- elapsed: 0.453314
 		
-Shutdown initiated
+	Shutdown initiated
 
-You exited!
+	You exited!
 

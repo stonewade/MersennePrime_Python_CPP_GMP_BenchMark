@@ -17,12 +17,7 @@ from collections import deque
 
 from pybindgen import *
 
-sys.path.append("/home/wade/Dev/Python/Tools")
-sys.path.append("/home/wade/Dev/Python/PerfNum")
-
 import lucaslehmer
-
-import pdbAttach
 
 sys.setrecursionlimit(100000)
 
@@ -264,10 +259,7 @@ def main():
 
     s = multiprocessing.Semaphore(numthreads)
 
-    pdbAttach.listen()
-
     checkTheory(s, numprimes, numthreads, ct, print_primes)
-    #printResults()
 
     process.shutdown()
 

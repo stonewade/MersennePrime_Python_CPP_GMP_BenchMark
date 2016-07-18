@@ -15,11 +15,9 @@ I chose PyBindGen as my wrapper interface API for the C extension instead of Boo
 
 Potential Improvements:
 
-I believe I could make my own version faster on my server - I spent only a low to moderate amount of time optimizing it using /usr/bin/perf.  
-
- - The bottleneck is in the the Lucas-Lehmer calculation - specifically the multiplication.  NUMA plus careful attention to memory allocation will be required to make it faster.  
+ - I believe I could make my own version faster on my server - I spent only a low to moderate amount of time optimizing it using /usr/bin/perf.  The bottleneck is in the the Lucas-Lehmer calculation - specifically the multiplication.  NUMA plus careful attention to memory allocation will be required to make it faster.  
  
- - The results that output on the fly are nominally unsorted, but this only affects the very small primes since they finish lightning quick and the sequencing that is provided by the input list of primes within the selected range is lost in the concurrent processing.  Changing this to sorting the output was tried, but the resulting pickling and results consolidation from the separate threads proved very costly in time at the tail end for such a small reward.  
+ - The results that output on the fly are nominally unsorted, but this only affects the very small primes since they finish lightning quick and the sequencing that is inherently provided by the input list of primes found within the selected range is lost in the concurrent processing.  Changing this to sorting the output was tried, but the resulting pickling and results consolidation from the separate threads proved very costly in time at the tail end for such a small reward.  
  
  - I could also use matplotlib to explore potential correlations between the resulting prime numbers.  I'm certain that has been beaten to death over the years in order to find some way to narrow the search and the numerical processing, but I'd like to see it for myself.
  

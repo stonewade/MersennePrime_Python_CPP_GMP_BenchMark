@@ -7,13 +7,23 @@ The largest prime number discoveries have been Mersenne's.  There are 49 known t
 
 Python by default can handle arbitrary integer size.  C/C++'s std lib can't nominally handle larger than quad precision, but the Gnu Multi-Precision library is designed to handle arbritrary precision arithmetic.  Clever algorithms allow realizable performance for what would otherwise be order-polynomial complexity.  For example, sqr(N) performance for multiplications.  An example of the cleverness: FFT's are used above a user configurable threshold of digits to perform a multiplication.
 
-This is a simple design that was started with Python in an exploration of "perfect numbers" - associated with Mersenne's as described in the provided reference.  The performance enhancement with the GMP lib allowed the Mersenne search in this case to grow from about 10,000 primes (values of p) with Python, in reasonable time, to about 30,000 in reasonable time on my 12 core linux server.  I now use this to do a quick and dirty personal benchmark with a known multiprocessing algorithm when evaluating a new machine.  The work could relatively quickly be extended to an arbitrary number of servers - but the infrastructure and the fact that without special configuration, a single Mersenne test needs to be contained entirely within one thread - finally limits the performance.  The GIMP network has been tweaked for many years to yield the fastest performance.  I've considered would could be gained with FPGA's - I think that's been considered elsewhere, too.  I think significant gains could be made - again, using some clever fast algorithms to perform the test.
+This is a simple design that was started with Python in an exploration of "perfect numbers" - associated with Mersenne's as described in the provided reference.  Performance enhancement with replacement of the MP-test using the GMP lib allowed the Mersenne search in this case to grow from testing p's in the range of the first 10,000 whole numbers with Python, in reasonable time, to a range of the first 60,000 in reasonable time on my 12 core linux server.  I now use this framework to do a quick and dirty personal benchmark with a known multiprocessing algorithm when evaluating a new machine.  The work could relatively quickly be extended to an arbitrary number of servers - but the infrastructure and the fact that without special configuration, a single Mersenne test needs to be contained entirely within one thread - finally limits the performance.  
 
-I chose PyBindGen as my wrapper interface API instead of Boost Python.  BP doesn't allow arbitrary precision arithmetic - or didn't, as of 2013, when I was deciding.  PyBindGen is simple and met the needs and it led to a quick decision without evaluating any of the other candidate frameworks that could potentially do the same thing.
+As a side note: The GIMP network has been tweaked for many years to yield the fastest performance.  I've considered what could be gained with the use of FPGA's - I think that's been considered elsewhere, too.  I think significant gains could be made - again, using some clever fast algorithms to perform the test.
+
+I chose PyBindGen as my wrapper interface API for the C extension instead of Boost Python.  BP doesn't allow arbitrary precision arithmetic - or didn't, as of 2013, when I was deciding.  PyBindGen is simple and met the needs and it led to a quick decision without evaluating any of the other candidate interfaces that could potentially do the same thing.
 
 Potential Improvements:
 
-I believe I could make my own version faster on my server - I spent only a low to moderate amount of time optimizing it using /usr/bin/perf.  The bottleneck is in the the Lucas-Lehmer calculation - specifically the multiplication.  NUMA plus careful attention to memory allocation will be required to make it faster.  The results are unsorted, but this only affects the very small primes since they finish lightning quick and any sequencing is lost in the concurrent processing.  Changing this to sorting the output was tried, but the resulting pickling and consolidation proved very costly in time at the tail end for such a small reward.  I could also use matplotlib to explore potential correlations between the resulting prime numbers.  I'm certain that has been beaten to death over the years in order to find some way to narrow the search and the numerical processing, but I'd like to see it for myself.  I could convert the python2.7 to python3, but that is non-trivial and isn't just as simple as running 2to3.  The C-api conversions in this case will require a moderate and fully manual effort.
+I believe I could make my own version faster on my server - I spent only a low to moderate amount of time optimizing it using /usr/bin/perf.  
+
+ - The bottleneck is in the the Lucas-Lehmer calculation - specifically the multiplication.  NUMA plus careful attention to memory allocation will be required to make it faster.  
+ 
+ - The results that output on the fly are nominally unsorted, but this only affects the very small primes since they finish lightning quick and the sequencing that is provided by the input list of primes within the selected range is lost in the concurrent processing.  Changing this to sorting the output was tried, but the resulting pickling and results consolidation from the separate threads proved very costly in time at the tail end for such a small reward.  
+ 
+ - I could also use matplotlib to explore potential correlations between the resulting prime numbers.  I'm certain that has been beaten to death over the years in order to find some way to narrow the search and the numerical processing, but I'd like to see it for myself.
+ 
+ - I could convert the python2.7 to python3, but that is non-trivial and isn't just as simple as running 2to3.  The C-api conversions in this case will require a moderate and fully manual effort.
 
 Required:
 
@@ -42,11 +52,11 @@ PerfNumMultiCLL.py -h gives:
                         Range of primes to search starting with 1 to this
                         number
 			
-To build and test on a single command line:
+To build and test on 10 worker threads over the primes found in the first 10,001 whole numbers on a single command line:
 
    bash -p -c "gmake clean && gmake" && taskset -c 0-10 bash -c 'PerfNumMultiCLL.py -t 10 -r 10001'
 
-Here, taskset is used to choose 11 cores on a platform.
+Here, taskset is used to choose 11 cores - including the master thread - on a platform.
 
 The result should look something like: 
 

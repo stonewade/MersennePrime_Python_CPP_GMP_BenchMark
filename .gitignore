@@ -3,3 +3,4 @@ lucaslehmer.so
 lucaslehmerpy.o
 lucaslehmerpy_bind.cpp
 lucaslehmerpy_bind.o
+test/

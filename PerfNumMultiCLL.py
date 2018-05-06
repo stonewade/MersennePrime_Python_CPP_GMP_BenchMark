@@ -14,7 +14,7 @@ import time
 import copy
 import argparse
 
-from collections import deque
+from collections import OrderedDict
 
 from pybindgen import *
 
@@ -32,17 +32,22 @@ def addArgs(p):
                    help="A specific prime value to test")
     mutex.add_argument("-l", "--prime_list", required=False, nargs="+", default=[],
                    help="A space separated list of specific primes to test")
+    mutex.add_argument("-n", "--return_num_primes_in_range", type=int, default=0,
+                   help="Return the number of standard primes from 2 to the given value")
     
 today = date.today()
 appstart = time.time()
 enabled = True
-queue = deque()
-jobs = {}
+jobs = OrderedDict()
 main_pid = 0
 sleep_time = 0.1
 e = multiprocessing.Event()
 spacer = " " * 5
 box_top_bottom = '-' * (4 + 6 * len(spacer) + 3 *20)
+MAX_THREADS = 30
+g_ct = 2
+pool = None
+l_pids = list()
 
 def writeFlush(str_, stderr_=False, func_=''):
     tz_info = "" if "TZ" not in os.environ.keys() else ' ' + os.environ["TZ"] + ' '
@@ -54,6 +59,32 @@ def writeFlush(str_, stderr_=False, func_=''):
     else:
         sys.stderr.write(t_str + ' ' + func + ' ' + str_ + "\n")
         sys.stderr.flush()
+
+def runShellCommand(cmd_, dry_run_=False, shell_=True):
+    s_output = ""
+    if dry_run_:
+        writeFlush("Dry run - would run:\n\n\t" + cmd_ + '\n')
+        return s_output
+    try:
+        pid = subprocess.Popen(cmd_, stdout=subprocess.PIPE, shell=shell_)
+        s_output, s_err = pid.communicate()
+        if not s_output and not s_err:
+            return ""
+    except:
+        writeFlush("Exception during call: " + cmd_, True, "")
+        return ""
+    finally:
+        pass
+    if s_err:
+        writeFlush("Error during call: " + cmd_ + ": " + s_err, True, "")
+    s_out = "" 
+    t = type(s_output) if s_output else int
+    if t != str:
+        if str(t).find("bytes") > -1:
+             s_out = s_output.decode( "unicode-escape" ).replace("\r\n", "\n")
+    elif str(t).find("str"):
+        s_out = s_output.decode( "ascii" ).replace("\r\n", "\n")
+    return s_out
 
 def lucasLehmer(N):
     if N % 2 == 0:
@@ -69,43 +100,44 @@ def lucasLehmer(N):
         return False
     return True
 
-def doLucasLehmer(X):
+def doLucasLehmer(X, Clucaslehmer_, S_):
     if not (X % 2):
         return False
-    Clucaslehmer = lucaslehmer.LucasLehmer()
-    return Clucaslehmer.sa_lucaslehmer(X);
+    return Clucaslehmer_.sa_lucaslehmer(X, S_);
 
 def doNothing(sig,frame):
     writeFlush("Received SIGINT: letting parent handle it, disabling", True)
     time.sleep(1)
-    process.shutdown()
 
-def worker(s, pool, X, force_print=False):
-    signal.signal(signal.SIGINT, doNothing)
+def worker(X_, args_, slot_, force_print_=False):
+    global enabled
+    global pool
+    global s
+    global l_pids
+    with pool.lock:
+        l_pids.append(os.getpid())
     name = multiprocessing.current_process().name
-
+    if not enabled:
+        return
     with s:
         pool.makeActive(name)
         timestart = time.time()
-        l = doLucasLehmer(X)
-        timestop = time.time()
-        time_elapsed = timestop - timestart
-        from_start = timestop - appstart
-        if l or force_print:
+        l = doLucasLehmer(X_, pool.LLI[slot_], pool.l_s[slot_])
+        if l or not args_.prime_range:
+            timestop = time.time()
+            time_elapsed = timestop - timestart
+            from_start = timestop - appstart
             print_str = "\t\t"
-            print_str += "|" + spacer + "{0:20d}".format(X) + spacer
-            print_str += "|" + spacer + "{0:20.6f}".format(from_start) + spacer
-            print_str += "|" + spacer + "{0:20.6f}".format(time_elapsed) + spacer
+            print_str += "|" + spacer + "{0:20d}".format(X_) + spacer
+            if l or force_print_:
+                print_str += "|" + spacer + "{0:20.6f}".format(from_start) + spacer
+                print_str += "|" + spacer + "{0:20.6f}".format(time_elapsed) + spacer
+            else:
+                print_str += "|" + spacer + "{0:20s}".format("    Not Mersenne    ") + spacer
+                print_str += "|" + spacer + "{0:20s}".format(' ' * 20) + spacer
             print_str += "|"
             print_str += "\n\t\t" + box_top_bottom
             writeFlush(print_str)
-        else:
-            print_str = "\t\t"
-            print_str += "|" + spacer + "{0:20d}".format(X) + spacer
-            print_str += "|" + spacer + "{0:20s}".format("    Not Mersenne    ") + spacer
-            print_str += "|" + spacer + "{0:20s}".format(' ' * 20) + spacer
-            print_str += "|"
-            print_str += "\n\t\t" + box_top_bottom
         pool.makeInactive(name)
 
 def primeFact(limit):
@@ -120,20 +152,18 @@ def primeFact(limit):
                 numbers.remove(i)
     return primes
 
-def doPass(sig, frame):
-    enabled = False
-
-def checkTheory(s, numlimit, numproc, ct, print_primes, args):
-    signal.signal(signal.SIGINT, terminateAll)
-
-    pool = ActivePool()
-
+def checkTheory(numlimit, ct, print_primes, args):
+    global s
+    s = multiprocessing.Semaphore(args.threads)
+    global pool
+    pool = ActivePool(args.threads)
     global g_ct
     if not ct:
         if not len(args.prime_list):
             primes = []
             try:
                 Clucaslehmer = lucaslehmer.LucasLehmer()
+                numlimit = args.return_num_primes_in_range if args.return_num_primes_in_range else numlimit
                 Clucaslehmer.sa_getListOfPrimes(primes, numlimit)
             except:
                 writeFlush("Exception getting primes", True)
@@ -143,6 +173,8 @@ def checkTheory(s, numlimit, numproc, ct, print_primes, args):
         else:
            primes = [int(a) for a in args.prime_list]
         writeFlush("\nTotal number of " + ("primes" if not len(args.prime_list) else "values to test") + " in set: {0}\n".format(len(primes)))
+        if args.return_num_primes_in_range:
+            sys.exit(0)
     else:
         primes = [ct]
     writeFlush("\t\t" + box_top_bottom)
@@ -153,169 +185,99 @@ def checkTheory(s, numlimit, numproc, ct, print_primes, args):
     print_str += "|"
     writeFlush(print_str)
     writeFlush("\t\t" + box_top_bottom)
-    for g_ct in primes:
-        name = 'job' + str(g_ct)
-        queue.append(name)
-        jobs[name] = multiprocessing.Process(target=worker, name=name, args=(s, pool, g_ct))
-
-    start_set = set()
-    fin_set = set()
-
+    for i, g_ct in enumerate(primes):
+        name = i
+        slot = i % args.threads
+        if slot not in pool.LLI.keys():
+            pool.LLI[slot] = lucaslehmer.LucasLehmer()
+            pool.l_s[slot] = 4
+        jobs[name] = multiprocessing.Process(target=worker, name=name, args=(g_ct, args, slot))
     j_list = jobs.keys()
-
     for j in j_list:
-        if e.is_set():
-            writeFlush("Terminated by signal: number of remaining jobs = {0}".format(len(queue)))
-            break
-
-        while len(start_set) < numproc and len(queue):
-            p = jobs[queue.popleft()]
-            #pool.monVal(int(p.name[3:]))
-            start_set.add(p.name)
-            p.start()
-
-        while True:
-            testb = True
-            fin_set.clear()
-            for j in start_set:
-                if not jobs[j].is_alive():
-                    if jobs[j].name in start_set:
-                        fin_set.add(jobs[j].name)
-
-            for i in fin_set:
-                start_set.remove(jobs[i].name)
-                jobs[i].join()
-
-            if len(fin_set):
-                break
-
-            time.sleep(sleep_time)
-
-            if not len(queue) and not len(start_set) and not len(fin_set):
-                break
-
-    for j in jobs:
-        if pool.inList(name):
-            pool.makeInactive(jobs[j].name)
-    '''
-    else:
-        name = 'job' + str(ct)
-        queue.append(name)
-        worker(s, pool, ct)
-        printResults()
-    '''
-
-MAX_THREADS = 30
-g_ct = 2
+        jobs[j].start()
+        time.sleep(0.05)
+    for j in j_list:
+        if jobs[j]:
+            jobs[j].join()
 
 class ActivePool(object):
-    mgr = multiprocessing.Manager()
-    results = mgr.dict()
-    active = mgr.list()
-    lock = multiprocessing.Lock()
-    @staticmethod
-    def getResults():
-        with ActivePool.lock:
-            return ActivePool.results
-            #return copy.deepcopy(ActivePool.results)
-    @staticmethod
-    def addResult(N, res):
-        with ActivePool.lock:
-            ActivePool.results[int(N)] = res
-    @staticmethod
-    def makeActive(name):
-        with ActivePool.lock:
-            ActivePool.active.append(name)
-    @staticmethod
-    def makeInactive(name):
-        with ActivePool.lock:
-            ActivePool.active.remove(name)
-    @staticmethod
-    def inList(name):
-        with ActivePool.lock:
-            if name in ActivePool.active:
-                return True
-            else:
-                return False
-    def __init__(self):
+    def __init__(self, num_procs_):
         super(ActivePool, self).__init__()
         self.pid = os.getpid()
         self.mon_incr = 1000
         self.mon_val = self.mon_incr
+        self.mgr = multiprocessing.Manager()
+        self.results = self.mgr.dict()
+        self.active = self.mgr.list()
+        self.lock = multiprocessing.Lock()
+        self.l_s = self.mgr.dict()
+        self.LLI = self.mgr.dict()
+    def getResults(self):
+        with self.lock:
+            return self.results
+            #return copy.deepcopy(ActivePool.results)
+    def addResult(self, N, res):
+        with self.lock:
+            self.results[int(N)] = res
+    def makeActive(self, name):
+        with self.lock:
+            self.active.append(name)
+    def makeInactive(self, name):
+        with self.lock:
+            self.active.remove(name)
+    def inList(self, name):
+        with self.lock:
+            if name in self.active:
+                return True
+            else:
+                return False
     def __str__(self):
-        with ActivePool.lock:
-            return str(ActivePool.active)
+        with self.lock:
+            return str(self.active)
     def monVal(self, val):
-        with ActivePool.lock:
+        with self.lock:
             if val > self.mon_val:
                 writeFlush("Monitor: mon_val = {0}, value now = {1}".format(self.mon_val, val))
                 self.mon_val += self.mon_incr
 
-def printResults():
-    writeFlush("Results")
-    results = ActivePool.getResults()
-    for key in sorted(results.keys()):
-        writeFlush(str(key) + '\t' + results[key])
-
-def terminateAll(sig,frame):
-    writeFlush("Received SIGINT: terminating all jobs", True)
-    sleep_time = 0
+def signalHandler(signal_, frame_):
     e.set()
-
-class MyProcess(multiprocessing.Process):
-    """ process class - handles exiting by signal"""
-    def __init__(self, ):
-        multiprocessing.Process.__init__(self)
-        self.exit = multiprocessing.Event()
-
-    def run(self):
-        while not self.exit.is_set():
-            time.sleep(1)
-        writeFlush("You exited!", True)
-
-    def shutdown(self):
-        writeFlush("Shutdown initiated", True)
-        self.exit.set()
+    global enabled
+    global pool
+    global l_pids
+    global jobs
+    enabled = False
+    for j in jobs.keys():
+        jobs[j].terminate()
+        jobs[j].join()
+        if j == jobs.keys()[-1]:
+            writeFlush("Killed by ctrl-C\n")
+    time.sleep(0.5)
+    for pid in l_pids:
+        cmd = r"kill 2>/dev/null" + str(pid)
+        runShellCommand(cmd)
+    sys.exit(1)
 
 def main():
     """ the main process - starts off checkTheory()"""
+    signal.signal(signal.SIGINT, signalHandler)
 
     parser = argparse.ArgumentParser()
     addArgs(parser)
 
     args = parser.parse_args()
 
-    numthreads = args.threads
     numprimes = args.prime_range
-
-    s = multiprocessing.Semaphore(numthreads)
-
-    '''
-    if args.prime_value:
-        pool = ActivePool()
-        name = "specific prime"
-        queue.append(name)
-        job = multiprocessing.Process(target=worker, name=name, args=(s, pool, args.prime_value, true))
-        job.start()
-        job.join()
-        return 0
-  
-    process = MyProcess()
-    process.start()
-  '''
 
     print_primes = False
 
     ct = args.prime_value
 
-    if numthreads > MAX_THREADS:
+    if args.threads > MAX_THREADS:
         writeFlush("Limit # of threads is {}".format(MAX_THREADS), True)
         sys.exit(1)
 
-    checkTheory(s, numprimes, numthreads, ct, print_primes, args)
-
-    #process.shutdown()
-
+    checkTheory(numprimes, ct, print_primes, args)
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -4,11 +4,11 @@ ROOT = $(PROJNAME)
 
 CC = g++
 
-DEBUG =
+DEBUG = -g
 
 OPT = -O3
 
-CPPFLAGS = $(DEBUG) $(OPT) -fPIC -frecord-gcc-switches -I/usr/include/python2.7
+CPPFLAGS = $(DEBUG) $(OPT) -w -fPIC -frecord-gcc-switches -I/usr/include/python2.7 -std=c++14
 
 LDFLAGS1 = -shared -fPIC $(DEBUG) $(OPT) -rdynamic -Wl,-rpath -Wl,$(PWD) -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu -lgmpxx -lgmp
 

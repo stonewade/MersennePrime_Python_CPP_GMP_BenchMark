@@ -2,6 +2,8 @@
 #include <iomanip>
 #include <cstdlib>
 #include <ctime>
+#include <vector>
+#include <iterator>
 #include <sys/time.h>
 
 #include <Python.h>
@@ -17,11 +19,14 @@ public:
     ~LucasLehmer() {}
     PyObject* sa_gcd(PyObject* a, PyObject* b);
     PyObject* sa_pow2mpcm(PyObject* y, PyObject* n, PyObject* c);
-    PyObject* sa_lucaslehmer(PyObject* N);
+    PyObject* sa_lucaslehmer(PyObject* N_, PyObject* S_);
     PyObject* sa_getListOfPrimes(PyObject* primes, PyObject* N);
     PyObject* tmp() { return _py_tmp; }
     void tmp(PyObject* t) { _py_tmp = t; }
 private:
+    typedef std::vector<unsigned long> primeVec_t;
+    typedef primeVec_t::iterator primeVecIter_t;
+    
     typedef struct timeStruct_t
     {
 	timeStruct_t() : numsamps(0), average(0), stddev(0) {}
@@ -59,7 +64,7 @@ private:
 	
 	return ((unsigned long long)a) | (((unsigned long long)d) << 32);;
     }
-   
+
     static PyObject* _py_tmp;
     static PyObject* _py_maxx;
     static PyObject* _py_zero;

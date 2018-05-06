@@ -29,7 +29,9 @@ lucaslehmerclass.add_method('sa_getListOfPrimes',
 
 lucaslehmerclass.add_method('sa_lucaslehmer', 
                       pybindgen.retval('PyObject*', caller_owns_return=True, is_const=False), 
-                      [pybindgen.param('PyObject*','N',transfer_ownership=False)])
+                      [pybindgen.param('PyObject*','N_',transfer_ownership=False),
+                       pybindgen.param('PyObject*','S_',transfer_ownership=False),
+                      ])
 
 lucaslehmerclass.add_method('tmp',
                       pybindgen.retval('PyObject*', caller_owns_return=True, is_const=False), 

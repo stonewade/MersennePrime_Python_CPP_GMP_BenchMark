@@ -8,11 +8,11 @@ DEBUG = -g
 
 OPT = -O3
 
-CPPFLAGS = $(DEBUG) $(OPT) -w -fPIC -frecord-gcc-switches -I/usr/include/python2.7 -std=c++14
+CPPFLAGS = $(DEBUG) $(OPT) -w -fPIC -frecord-gcc-switches -I/usr/local/include -I/usr/include/python2.7 -std=c++14
 
-LDFLAGS1 = -shared -fPIC $(DEBUG) $(OPT) -rdynamic -Wl,-rpath -Wl,$(PWD) -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu -lgmpxx -lgmp
+LDFLAGS1 = -shared -fPIC $(DEBUG) $(OPT) -rdynamic -Wl,-rpath -Wl,$(PWD) -Wl,-rpath -Wl,/usr/local/lib -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu -lgmpxx -lgmp
 
-LDFLAGS = -shared -fPIC $(DEBUG) $(OPT) -rdynamic -Wl,-rpath -Wl,$(PWD) -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu -L. -l$(ROOT)py -lgmpxx -lgmp
+LDFLAGS = -shared -fPIC $(DEBUG) $(OPT) -rdynamic -Wl,-rpath -Wl,$(PWD) -Wl,-rpath -Wl,/usr/local/lib -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu -L. -l$(ROOT)py -lgmpxx -lgmp
 
 LINK_TARGET = $(ROOT).so
 

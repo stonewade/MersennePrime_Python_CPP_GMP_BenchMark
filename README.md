@@ -25,15 +25,15 @@ Potential Improvements:
 
 Required:
 
-	o Linux OS - tested on Ubuntu 13.10 and up - latest: Fedora 27
+	o Linux OS - latest: Fedora 27
 
-	o g++: tested with 4.9 and up - latest: 7.3.1
+	o g++: latest: 7.3.1
 
-	o libgmpxx.so: tested with libgmpxx.so.4.5.0, can be gotten at: https://gmplib.org
+	o libgmpxx.so: latest 6.1.2, can be gotten at: https://gmplib.org
 
 	o Python2.7
 
-	o PyBindGen: tested with 0.15.0 and up, can be gotten at: https://pypi.python.org/pypi/PyBindGen
+	o PyBindGen: tested with 0.18.0 and up, can be gotten at: https://pypi.python.org/pypi/PyBindGen
 
 PerfNumMultiCLL.py -h gives:
 

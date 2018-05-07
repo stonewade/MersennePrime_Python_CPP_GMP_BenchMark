@@ -59,13 +59,21 @@ PerfNumMultiCLL.py -h gives:
 1) To build and test on 10 worker threads over the primes found in the first 10,001 whole numbers on a single command line:
 
 $  bash -p -c "gmake clean && gmake" && bash -c 'PerfNumMultiCLL.py -t 10 -r 10001'
+
 rm -f lucaslehmerpy_bind.cpp liblucaslehmerpy.so lucaslehmerpy.o lucaslehmerpy_bind.o lucaslehmer.so
+
 Clean done
+
 PYTHONPATH=:./ python lucaslehmerBind.py > lucaslehmerpy_bind.cpp
+
 g++ -g -O3 -w -fPIC -frecord-gcc-switches -I/usr/include/python2.7 -std=c++14 -c -o lucaslehmerpy.o lucaslehmerpy.cpp
+
 g++ -shared -fPIC -g -O3 -rdynamic -Wl,-rpath -Wl,/home/wade/Dev/Python/MersennePrime_Python_CPP_GMP_BenchMark -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu -lgmpxx -lgmp -o liblucaslehmerpy.so lucaslehmerpy.o
+
 g++ -g -O3 -w -fPIC -frecord-gcc-switches -I/usr/include/python2.7 -std=c++14 -c -o lucaslehmerpy_bind.o lucaslehmerpy_bind.cpp
+
 g++ -o lucaslehmer.so lucaslehmerpy_bind.o -shared -fPIC -g -O3 -rdynamic -Wl,-rpath -Wl,/home/wade/Dev/Python/MersennePrime_Python_CPP_GMP_BenchMark -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu -L. -llucaslehmerpy -lgmpxx -lgmp
+
 Build done
   
 Total number of primes in set: 1229
@@ -182,6 +190,7 @@ Total number of values to test in set: 47
 3) To explore and test a particular value of p, you could run:
 
 $  PerfNumMultiCLL.py -t 10 -p 44497
+
   		----------------------------------------------------------------------------------------------
   		|         Tested Value         |      Time From App Start     |     Elapsed Time To Calc     |
   		----------------------------------------------------------------------------------------------

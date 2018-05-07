@@ -86,36 +86,17 @@ def runShellCommand(cmd_, dry_run_=False, shell_=True):
         s_out = s_output.decode( "ascii" ).replace("\r\n", "\n")
     return s_out
 
-def lucasLehmer(N):
-    if N % 2 == 0:
-        return 2
-    s = 4
-    M = pow(2, N) - 1
-    for i in xrange(N - 2):
-        if enabled:
-            s = ((s * s) - 2) % M
-        else:
-            return False
-    if s:
-        return False
-    return True
-
 def doLucasLehmer(X, Clucaslehmer_, S_):
     if not (X % 2):
         return False
     return Clucaslehmer_.sa_lucaslehmer(X, S_);
-
-def doNothing(sig,frame):
-    writeFlush("Received SIGINT: letting parent handle it, disabling", True)
-    time.sleep(1)
 
 def worker(X_, args_, slot_, force_print_=False):
     global enabled
     global pool
     global s
     global l_pids
-    with pool.lock:
-        l_pids.append(os.getpid())
+    l_pids.append(os.getpid())
     name = multiprocessing.current_process().name
     if not enabled:
         return
@@ -139,18 +120,6 @@ def worker(X_, args_, slot_, force_print_=False):
             print_str += "\n\t\t" + box_top_bottom
             writeFlush(print_str)
         pool.makeInactive(name)
-
-def primeFact(limit):
-    numbers = [ _ for _ in range (2, limit + 1) ]
-    primes = []
-
-    while numbers:
-        candidate = numbers[0]
-        primes.append(candidate)
-        for i in range(candidate, limit + 1, candidate):
-            if i in numbers: 
-                numbers.remove(i)
-    return primes
 
 def checkTheory(numlimit, ct, print_primes, args):
     global s
@@ -195,7 +164,7 @@ def checkTheory(numlimit, ct, print_primes, args):
     j_list = jobs.keys()
     for j in j_list:
         jobs[j].start()
-        time.sleep(0.05)
+        time.sleep(0.001)
     for j in j_list:
         if jobs[j]:
             jobs[j].join()
@@ -215,7 +184,6 @@ class ActivePool(object):
     def getResults(self):
         with self.lock:
             return self.results
-            #return copy.deepcopy(ActivePool.results)
     def addResult(self, N, res):
         with self.lock:
             self.results[int(N)] = res
@@ -248,8 +216,9 @@ def signalHandler(signal_, frame_):
     global jobs
     enabled = False
     for j in jobs.keys():
-        jobs[j].terminate()
-        jobs[j].join()
+        if jobs[j]:
+            jobs[j].terminate()
+            jobs[j].join()
         if j == jobs.keys()[-1]:
             writeFlush("Killed by ctrl-C\n")
     time.sleep(0.5)

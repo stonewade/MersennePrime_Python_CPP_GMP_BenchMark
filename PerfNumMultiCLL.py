@@ -22,6 +22,8 @@ import lucaslehmer
 
 sys.setrecursionlimit(100000)
 
+DEFAULT_PRIME_RANGE = [2, 10001]
+
 def addArgs(p):
     p.add_argument("-t", "--threads", type=int, required=False, default=10,
                    help="Number of threads")
@@ -32,8 +34,8 @@ def addArgs(p):
                    help="A specific prime value to test")
     mutex.add_argument("-l", "--prime_list", required=False, nargs="+", default=[],
                    help="A space separated list of specific primes to test")
-    mutex.add_argument("-n", "--return_num_primes_in_range", type=int, default=0,
-                   help="Return the number of standard primes from 2 to the given value")
+    mutex.add_argument("-n", "--return_num_primes_in_range", required=False, nargs=2, default=DEFAULT_PRIME_RANGE,
+                   help="Return the number of standard primes over the given range")
     
 today = date.today()
 appstart = time.time()
@@ -132,8 +134,9 @@ def checkTheory(numlimit, ct, print_primes, args):
             primes = []
             try:
                 Clucaslehmer = lucaslehmer.LucasLehmer()
-                numlimit = args.return_num_primes_in_range if args.return_num_primes_in_range else numlimit
-                Clucaslehmer.sa_getListOfPrimes(primes, numlimit)
+                range_low, range_high = args.return_num_primes_in_range[0], args.return_num_primes_in_range[1]
+                print("{0}:{1}".format(range_low, range_high))
+                Clucaslehmer.sa_getListOfPrimes(primes, range_low, range_high)
             except:
                 writeFlush("Exception getting primes", True)
                 sys.exit(1)
@@ -142,7 +145,7 @@ def checkTheory(numlimit, ct, print_primes, args):
         else:
            primes = [int(a) for a in args.prime_list]
         writeFlush("\nTotal number of " + ("primes" if not len(args.prime_list) else "values to test") + " in set: {0}\n".format(len(primes)))
-        if args.return_num_primes_in_range:
+        if args.return_num_primes_in_range != DEFAULT_PRIME_RANGE:
             sys.exit(0)
     else:
         primes = [ct]

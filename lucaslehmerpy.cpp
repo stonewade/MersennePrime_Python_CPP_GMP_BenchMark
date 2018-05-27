@@ -53,18 +53,19 @@ PyObject* LucasLehmer::mpz_convToPy(mpz_t &mv)
     return pobj;
 }
 
-PyObject* LucasLehmer::sa_getListOfPrimes(PyObject* primes, PyObject* N)
+PyObject* LucasLehmer::sa_getListOfPrimes(PyObject* primes, PyObject* N_low, PyObject* N_high)
 {
-    unsigned long num_to_get = PyLong_AsLong(N);
+    unsigned long range_high = PyLong_AsLong(N_high);
+    unsigned long range_low = PyLong_AsLong(N_low);
 
     primeVec_t pvec;
     pvec.push_back(2);
 
-    primeVec_t rvec(num_to_get);
+    primeVec_t rvec(range_high);
 
     std::fill(rvec.begin(), rvec.end(), 0);
     
-    for ( size_t i = 3; i < num_to_get + 1; i++)
+    for ( size_t i = 3; i < range_high + 1; i++)
     {
         if (!(i % 2))
             continue;
@@ -80,7 +81,7 @@ PyObject* LucasLehmer::sa_getListOfPrimes(PyObject* primes, PyObject* N)
 	candidate = pvec[0];
         rvec[count++] = candidate;
 
-	for (unsigned long i = candidate; i < num_to_get + 1; i += candidate)
+	for (unsigned long i = candidate; i < range_high + 1; i += candidate)
 	{
             auto it = std::lower_bound(pvec.begin(), pvec.end(), i);
             if (it != pvec.end() && *it == i)
@@ -93,6 +94,8 @@ PyObject* LucasLehmer::sa_getListOfPrimes(PyObject* primes, PyObject* N)
     for (size_t i = 0; i < rvec.size(); i++)
     {
         unsigned long v = rvec[i];
+        if (v < range_low)
+            continue;
         if (!v)
             break;
 	tmp = PyLong_FromUnsignedLong(v);

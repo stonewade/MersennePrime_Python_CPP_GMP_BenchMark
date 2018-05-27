@@ -25,7 +25,8 @@ lucaslehmerclass.add_method('sa_pow2mpcm',
 lucaslehmerclass.add_method('sa_getListOfPrimes', 
                       pybindgen.retval('PyObject*', caller_owns_return=True, is_const=False), 
                       [pybindgen.param('PyObject*','primes',transfer_ownership=False),
-                       pybindgen.param('PyObject*','N',transfer_ownership=False)])
+                       pybindgen.param('PyObject*','N_low',transfer_ownership=False),
+                       pybindgen.param('PyObject*','N_high',transfer_ownership=False)])
 
 lucaslehmerclass.add_method('sa_lucaslehmer', 
                       pybindgen.retval('PyObject*', caller_owns_return=True, is_const=False), 

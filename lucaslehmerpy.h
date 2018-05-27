@@ -20,7 +20,7 @@ public:
     PyObject* sa_gcd(PyObject* a, PyObject* b);
     PyObject* sa_pow2mpcm(PyObject* y, PyObject* n, PyObject* c);
     PyObject* sa_lucaslehmer(PyObject* N_, PyObject* S_);
-    PyObject* sa_getListOfPrimes(PyObject* primes, PyObject* N);
+    PyObject* sa_getListOfPrimes(PyObject* primes, PyObject* N_low, PyObject* N_high);
     PyObject* tmp() { return _py_tmp; }
     void tmp(PyObject* t) { _py_tmp = t; }
 private:
